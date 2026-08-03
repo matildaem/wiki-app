@@ -83,6 +83,9 @@
   .md pre code{background:none;padding:0}
   .md img{max-width:100%;border-radius:10px}
   .md hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+  .md li input[type=checkbox]{width:19px;height:19px;accent-color:var(--personal);margin-right:8px;vertical-align:-4px;cursor:pointer}
+  .md li input[type=checkbox]:disabled{cursor:default}
+  .md li:has(> input[type=checkbox]){list-style:none;margin-left:-22px}
 
   /* search results */
   .result .snippet{font-size:14px;color:var(--muted);margin-top:4px}
@@ -311,6 +314,43 @@ function renderMd(mdText, basePath) {
 }
 async function openImage(path){ const u = await getBlobUrl(path); if (u) window.open(u, "_blank"); }
 
+/* ---------- clickable to-dos ---------- */
+function wireCheckboxes(container, path, mdText) {
+  const taskLines = mdText.split("\n").filter(l => /^\s*[-*]\s+\[[ xX]\]\s+/.test(l));
+  const boxes = container.querySelectorAll('li input[type="checkbox"]');
+  boxes.forEach((box, k) => {
+    const line = taskLines[k];
+    if (!line) return;
+    if (/^\s*[-*]\s+\[[xX]\]/.test(line)) { box.disabled = true; return; }
+    box.disabled = false;
+    box.addEventListener("change", () => archiveTodo(path, line, box));
+  });
+}
+async function archiveTodo(path, line, box) {
+  box.disabled = true;
+  try {
+    const f = await getFile(path, true);
+    const lines = f.text.split("\n");
+    const idx = lines.indexOf(line);
+    if (idx === -1) { toast("That item changed elsewhere — reloading"); return route(); }
+    lines.splice(idx, 1);
+    const itemText = line.replace(/^\s*[-*]\s+\[\s?\]\s*/, "");
+    const done = `- [x] ${itemText} _(done ${nowStamp().date})_`;
+    let ai = lines.findIndex(l => /^##\s+Archive\s*$/i.test(l.trim()));
+    if (ai === -1) {
+      if (lines.length && lines[lines.length - 1].trim() !== "") lines.push("");
+      lines.push("## Archive", "", done);
+    } else {
+      let pos = ai + 1;
+      if (lines[pos] !== undefined && lines[pos].trim() === "") pos++;
+      lines.splice(pos, 0, done);
+    }
+    await putFile(path, lines.join("\n"), `Check off to-do: ${itemText.slice(0, 60)}`, f.sha);
+    toast("Done ✓ — moved to Archive");
+    route();
+  } catch (e) { toast("Couldn't update — try again"); box.disabled = false; box.checked = false; }
+}
+
 /* ---------- views ---------- */
 async function viewHome() {
   loadingView("");
@@ -426,6 +466,7 @@ async function viewPage(path) {
   if (!f) { app().innerHTML = shell(`<div class="card">That page doesn't exist (anymore). <a href="#/">Go home</a>.</div>`, tab); return; }
   app().innerHTML = shell(`<div class="card" id="pagebody"></div>`, tab);
   $("#pagebody").appendChild(renderMd(f.text, path));
+  wireCheckboxes($("#pagebody"), path, f.text);
 }
 
 async function viewInbox() {
@@ -438,7 +479,7 @@ async function viewInbox() {
       <div class="photo-grid" style="margin-top:10px">${photos.map(p=>`<img data-p="${esc(p.path)}" alt="">`).join("")}</div></div>`;
   }
   app().innerHTML = shell(`<div class="card" id="pagebody"></div>${photosHtml}`, "inbox");
-  if (f) $("#pagebody").appendChild(renderMd(f.text, "inbox/inbox.md"));
+  if (f) { $("#pagebody").appendChild(renderMd(f.text, "inbox/inbox.md")); wireCheckboxes($("#pagebody"), "inbox/inbox.md", f.text); }
   document.querySelectorAll(".photo-grid img").forEach(img => getBlobUrl(img.dataset.p).then(u => { if (u) img.src = u; }));
 }
 
