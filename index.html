@@ -86,6 +86,10 @@
   .md li input[type=checkbox]{width:19px;height:19px;accent-color:var(--personal);margin-right:8px;vertical-align:-4px;cursor:pointer}
   .md li input[type=checkbox]:disabled{cursor:default}
   .md li:has(> input[type=checkbox]){list-style:none;margin-left:-22px}
+  .todo-item{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
+  .todo-item input[type=checkbox]{width:19px;height:19px;accent-color:var(--personal);cursor:pointer;flex-shrink:0;margin-top:2px}
+  .todo-item .grow{flex:1}
+  .todo-item .src{font-size:12.5px}
 
   /* search results */
   .result .snippet{font-size:14px;color:var(--muted);margin-top:4px}
@@ -352,6 +356,26 @@ async function archiveTodo(path, line, box) {
 }
 
 /* ---------- views ---------- */
+async function pendingTodos() {
+  const tree = await getTree();
+  const files = tree.filter(t => t.type === "blob" && t.path.endsWith(".md") && !t.path.startsWith("_meta/"));
+  const out = [];
+  await Promise.all(files.map(async t => {
+    try {
+      const f = await getFile(t.path);
+      let inArchive = false;
+      for (const line of f.text.split("\n")) {
+        const trimmed = line.trim();
+        if (/^##\s+/.test(trimmed)) inArchive = /^##\s+Archive\s*$/i.test(trimmed);
+        if (!inArchive && /^\s*[-*]\s+\[\s?\]\s+/.test(line))
+          out.push({ path: t.path, line, text: line.replace(/^\s*[-*]\s+\[\s?\]\s*/, ""), title: titleOf(f.text, prettyName(t.path)) });
+      }
+    } catch (e) {}
+  }));
+  out.sort((a, b) => a.path.localeCompare(b.path));
+  return out;
+}
+
 async function viewHome() {
   loadingView("");
   let recent = "";
@@ -365,11 +389,19 @@ async function viewHome() {
     }
   } catch (e) {}
   const counts = {};
+  let todos = [];
   try {
     const tree = await getTree();
     for (const s of SECTIONS)
       counts[s.id] = tree.filter(t => t.path.startsWith(s.id + "/") && t.path.endsWith(".md") && !t.path.endsWith("_index.md")).length;
+    todos = await pendingTodos();
   } catch (e) {}
+  const todoCard = `<div class="card" id="todocard"><b>☑️ To-dos</b>
+    ${todos.length === 0 ? `<div class="muted" style="margin-top:8px">Nothing pending — all clear 🎉</div>` :
+      todos.map((t, i) => `<div class="todo-item">
+        <input type="checkbox" data-i="${i}">
+        <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
+      </div>`).join("")}</div>`;
   app().innerHTML = shell(`
     <div class="card capture">
       <b>✏️ Quick note</b>
@@ -394,9 +426,14 @@ async function viewHome() {
       <div class="grow"><b class="accent-inbox">Inbox</b><div class="muted">Raw notes waiting to be filed</div></div>
       <span class="chev">›</span>
     </div></a>
-    ${recent}`, "");
+    ${recent}
+    ${todoCard}`, "");
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
+  document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
+    const t = todos[Number(box.dataset.i)];
+    box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
+  });
 }
 
 async function saveQuickNote() {
