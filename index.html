@@ -130,6 +130,7 @@ const app = () => $("#app");
 /* ---------- GitHub API ---------- */
 async function gh(path, opts = {}) {
   const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/${path}`, {
+    cache: "no-store",
     ...opts,
     headers: {
       "Authorization": "Bearer " + token,
@@ -319,8 +320,8 @@ async function viewHome() {
     if (ch) {
       const rows = [...ch.text.matchAll(/^\|\s*([\d-]+)\s*\|\s*(.+?)\s*\|\s*$/gm)]
         .filter(r => !/^-+$/.test(r[1])).slice(0, 5);
-      if (rows.length) recent = `<div class="card"><b>🕘 Recently filed</b>
-        ${rows.map(r=>`<p class="muted" style="margin:8px 0 0">${esc(r[1])} — ${esc(r[2])}</p>`).join("")}</div>`;
+      if (rows.length) recent = `<a class="card cardlink" href="#/p/_meta/changelog.md"><b>🕘 Recently filed</b> <span class="chev">›</span>
+        ${rows.map(r=>`<p class="muted" style="margin:8px 0 0">${esc(r[1])} — ${esc(r[2])}</p>`).join("")}</a>`;
     }
   } catch (e) {}
   const counts = {};
