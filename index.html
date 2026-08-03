@@ -19,10 +19,11 @@
     --muted:#827c67;         /* dry grass */
     --line:#e6e1cc;          /* straw */
     --accent:#5661c2;        /* cornflower */
-    --work:#5661c2;          /* cornflower blue */
-    --personal:#41773d;      /* meadow green */
-    --learning:#b8641b;      /* marigold */
-    --inbox:#8a5fa8;         /* lavender */
+    --work:#c76c1a;          /* orange marigold */
+    --personal:#8f63bf;      /* lilac */
+    --learning:#a98600;      /* buttercup yellow */
+    --inbox:#c74f74;         /* wild-rose pink */
+    --todo:#569244;          /* light leaf green */
     --deep:#3d5f31;          /* deep leaf green */
     --poppy:#c8442c;         /* poppy red */
     --radius:14px; --shadow:0 1px 3px rgba(61,58,20,.07),0 4px 14px rgba(61,58,20,.06);
@@ -99,11 +100,11 @@
   .md pre code{background:none;padding:0}
   .md img{max-width:100%;border-radius:10px}
   .md hr{border:none;border-top:1px solid var(--line);margin:18px 0}
-  .md li input[type=checkbox]{width:19px;height:19px;accent-color:var(--personal);margin-right:8px;vertical-align:-4px;cursor:pointer}
+  .md li input[type=checkbox]{width:19px;height:19px;accent-color:var(--todo);margin-right:8px;vertical-align:-4px;cursor:pointer}
   .md li input[type=checkbox]:disabled{cursor:default}
   .md li:has(> input[type=checkbox]){list-style:none;margin-left:-22px}
   .todo-item{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
-  .todo-item input[type=checkbox]{width:19px;height:19px;accent-color:var(--personal);cursor:pointer;flex-shrink:0;margin-top:2px}
+  .todo-item input[type=checkbox]{width:19px;height:19px;accent-color:var(--todo);cursor:pointer;flex-shrink:0;margin-top:2px}
   .todo-item .grow{flex:1}
   .todo-item .src{font-size:12.5px}
 
@@ -132,6 +133,7 @@
   .photo-grid img{width:100%;border-radius:10px;border:1px solid var(--line)}
   .accent-work{color:var(--work)} .accent-personal{color:var(--personal)}
   .accent-learning{color:var(--learning)} .accent-inbox{color:var(--inbox)}
+  .accent-todo{color:var(--todo)}
 </style>
 </head>
 <body>
@@ -264,7 +266,7 @@ function shell(inner, activeTab) {
         <input name="q" type="search" placeholder="Search everything…" autocomplete="off">
       </form>
       <button class="iconbtn" id="refreshbtn" title="Refresh" onclick="refreshAll(this)">↻</button>
-      <button class="iconbtn" title="Sign out" onclick="if(confirm('Sign out of the wiki on this device?'))logout()">🚪</button>
+      <button class="iconbtn" title="Sign out" onclick="if(confirm('Sign out of the wiki on this device?'))logout()">✕</button>
     </div>
     <nav class="tabs">
       <button class="tab ${activeTab===''?'active':''}" onclick="go('')">Home</button>
@@ -419,7 +421,7 @@ async function viewHome() {
       counts[s.id] = tree.filter(t => t.path.startsWith(s.id + "/") && t.path.endsWith(".md") && !t.path.endsWith("_index.md")).length;
     todos = await pendingTodos();
   } catch (e) {}
-  const todoCard = `<div class="card" id="todocard"><b>☑️ To-dos</b>
+  const todoCard = `<div class="card" id="todocard"><b class="accent-todo">☑️ To-dos</b>
     ${todos.length === 0 ? `<div class="muted" style="margin-top:8px">Nothing pending — all clear 🎉</div>` :
       todos.map((t, i) => `<div class="todo-item">
         <input type="checkbox" data-i="${i}">
