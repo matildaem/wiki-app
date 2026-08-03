@@ -1,0 +1,12 @@
+{
+  "name": "MG's Wiki",
+  "short_name": "Wiki",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f6f5ea",
+  "theme_color": "#f6f5ea",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
