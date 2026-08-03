@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf9f6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MG's Wiki">
+<title>MG's Wiki</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<script src="marked.min.js"></script>
+<style>
+  :root{
+    --bg:#faf9f6; --card:#ffffff; --ink:#22211e; --muted:#6f6c64; --line:#e8e5de;
+    --accent:#4f46e5; --work:#4f46e5; --personal:#059669; --learning:#b45309; --inbox:#475569;
+    --radius:14px; --shadow:0 1px 3px rgba(30,25,10,.06),0 4px 14px rgba(30,25,10,.05);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.6;padding-bottom:60px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* header */
+  header{position:sticky;top:0;background:rgba(250,249,246,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);z-index:10;padding-top:env(safe-area-inset-top)}
+  .bar{display:flex;align-items:center;gap:10px;padding:10px 0}
+  .brand{font-weight:700;font-size:17px;white-space:nowrap;cursor:pointer}
+  .searchbox{flex:1;display:flex}
+  .searchbox input{flex:1;min-width:0;border:1px solid var(--line);border-radius:99px;padding:7px 14px;
+    font-size:15px;background:var(--card);outline:none}
+  .searchbox input:focus{border-color:var(--accent)}
+  .iconbtn{border:none;background:none;font-size:18px;cursor:pointer;padding:4px;color:var(--muted)}
+  nav.tabs{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;-webkit-overflow-scrolling:touch}
+  nav.tabs::-webkit-scrollbar{display:none}
+  .tab{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 13px;
+    font-size:13.5px;white-space:nowrap;cursor:pointer;color:var(--ink)}
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  main{padding:18px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .cardlink{display:block;color:inherit}
+  .cardlink:hover{text-decoration:none;border-color:#d5d1c6}
+  h1.pagetitle{font-size:24px;margin:4px 0 14px}
+  .muted{color:var(--muted);font-size:13.5px}
+  .sec-emoji{font-size:22px;margin-right:8px}
+  .seccard{display:flex;align-items:center;gap:4px}
+  .seccard .grow{flex:1}
+  .seccard b{font-size:16.5px}
+  .chev{color:var(--muted)}
+
+  /* quick capture */
+  .capture textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    font-size:16px;font-family:inherit;resize:vertical;min-height:64px;outline:none;background:#fffdf8}
+  .capture textarea:focus{border-color:var(--accent)}
+  .capture .row{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .btn{border:none;border-radius:10px;padding:9px 18px;font-size:15px;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.primary:disabled{opacity:.5}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+  .spacer{flex:1}
+
+  /* markdown content */
+  .md h1{font-size:23px;line-height:1.3;margin:6px 0 10px}
+  .md h2{font-size:19px;margin:22px 0 8px}
+  .md h3{font-size:16.5px;margin:18px 0 6px}
+  .md p{margin:10px 0}
+  .md ul,.md ol{padding-left:24px}
+  .md li{margin:4px 0}
+  .md table{border-collapse:collapse;width:100%;font-size:14.5px;display:block;overflow-x:auto}
+  .md th,.md td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+  .md th{background:#f4f2ec}
+  .md blockquote{margin:12px 0;padding:10px 14px;background:#fff8e6;border-left:4px solid #eab308;
+    border-radius:0 10px 10px 0}
+  .md blockquote p{margin:4px 0}
+  .md code{background:#f4f2ec;border-radius:5px;padding:1px 6px;font-size:14px}
+  .md pre{background:#f4f2ec;border-radius:10px;padding:12px;overflow-x:auto}
+  .md pre code{background:none;padding:0}
+  .md img{max-width:100%;border-radius:10px}
+  .md hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+
+  /* search results */
+  .result .snippet{font-size:14px;color:var(--muted);margin-top:4px}
+  .result mark{background:#fde68a;border-radius:3px;padding:0 2px}
+
+  /* login */
+  .login{max-width:420px;margin:12vh auto 0;text-align:center;padding:0 20px}
+  .login .big{font-size:52px}
+  .login h1{font-size:22px;margin:8px 0 4px}
+  .login p{color:var(--muted);font-size:14.5px}
+  .login input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;
+    margin:14px 0 10px;outline:none;font-family:ui-monospace,monospace}
+  .login input:focus{border-color:var(--accent)}
+  .login .err{color:#b91c1c;font-size:14px;min-height:20px}
+
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-size:14.5px;
+    opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:88vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .loading{text-align:center;color:var(--muted);padding:40px 0;font-size:14.5px}
+  .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .photo-grid img{width:100%;border-radius:10px;border:1px solid var(--line)}
+  .accent-work{color:var(--work)} .accent-personal{color:var(--personal)}
+  .accent-learning{color:var(--learning)} .accent-inbox{color:var(--inbox)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+"use strict";
+const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
+const SECTIONS = [
+  { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
+  { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
+  { id:"learning", emoji:"📚", name:"Learning", desc:"Study notes, how-tos, reference",          cls:"accent-learning" },
+];
+let token = localStorage.getItem("wikiToken") || "";
+const cache = { files:{}, dirs:{}, tree:null, blobs:{} };
+const $ = sel => document.querySelector(sel);
+const app = () => $("#app");
+
+/* ---------- GitHub API ---------- */
+async function gh(path, opts = {}) {
+  const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/${path}`, {
+    ...opts,
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Accept": "application/vnd.github+json",
+      ...(opts.headers || {})
+    }
+  });
+  if (res.status === 401) { logout("Your access key stopped working — paste it again (or a new one)."); throw new Error("unauthorized"); }
+  if (!res.ok && res.status !== 404) throw new Error(`GitHub error ${res.status}`);
+  return res;
+}
+function b64decode(b64) {
+  const bin = atob(b64.replace(/\n/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function b64encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+async function getFile(path, fresh = false) {
+  if (!fresh && cache.files[path]) return cache.files[path];
+  const res = await gh(`contents/${encodeURI(path)}?ref=${CFG.branch}`);
+  if (res.status === 404) return null;
+  const j = await res.json();
+  const f = { path, sha: j.sha, text: b64decode(j.content) };
+  cache.files[path] = f;
+  return f;
+}
+async function putFile(path, text, message, sha) {
+  const body = { message, branch: CFG.branch, content: b64encode(text) };
+  if (sha) body.sha = sha;
+  const res = await gh(`contents/${encodeURI(path)}`, { method: "PUT", body: JSON.stringify(body) });
+  if (!res.ok) throw new Error("save failed " + res.status);
+  delete cache.files[path]; cache.tree = null;
+  return res.json();
+}
+async function putBinary(path, base64, message) {
+  const res = await gh(`contents/${encodeURI(path)}`, {
+    method: "PUT",
+    body: JSON.stringify({ message, branch: CFG.branch, content: base64 })
+  });
+  if (!res.ok) throw new Error("upload failed " + res.status);
+  cache.tree = null;
+  return res.json();
+}
+async function listDir(path) {
+  if (cache.dirs[path]) return cache.dirs[path];
+  const res = await gh(`contents/${encodeURI(path)}?ref=${CFG.branch}`);
+  if (res.status === 404) return [];
+  const j = await res.json();
+  cache.dirs[path] = j;
+  return j;
+}
+async function getTree() {
+  if (cache.tree) return cache.tree;
+  const res = await gh(`git/trees/${CFG.branch}?recursive=1`);
+  const j = await res.json();
+  cache.tree = j.tree || [];
+  return cache.tree;
+}
+async function getBlobUrl(path) {
+  if (cache.blobs[path]) return cache.blobs[path];
+  const res = await gh(`contents/${encodeURI(path)}?ref=${CFG.branch}`, {
+    headers: { "Accept": "application/vnd.github.raw+json" }
+  });
+  if (!res.ok) return null;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  cache.blobs[path] = url;
+  return url;
+}
+
+/* ---------- helpers ---------- */
+function esc(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
+function titleOf(md, fallback){ const m = md.match(/^#\s+(.+)$/m); return m ? m[1].trim() : fallback; }
+function summaryOf(md){ const m = md.match(/^_([^_]+)_\s*$/m) || md.match(/^\*([^*]+)\*\s*$/m); return m ? m[1].trim() : ""; }
+function prettyName(p){ return p.split("/").pop().replace(/\.md$/,"").replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()); }
+function resolvePath(base, rel){
+  if (/^(https?:|mailto:|#)/.test(rel)) return null;
+  const parts = base.split("/").slice(0,-1);
+  for (const seg of rel.split("/")) {
+    if (seg === "..") parts.pop();
+    else if (seg !== "." && seg !== "") parts.push(seg);
+  }
+  return parts.join("/").split("#")[0];
+}
+function nowStamp(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  return { date:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`, time:`${p(d.getHours())}:${p(d.getMinutes())}` };
+}
+function logout(msg){ token=""; localStorage.removeItem("wikiToken"); renderLogin(msg); }
+</script>
+<script>
+"use strict";
+/* ---------- shell ---------- */
+function shell(inner, activeTab) {
+  return `
+  <header><div class="wrap">
+    <div class="bar">
+      <div class="brand" onclick="go('')">🏠 MG's Wiki</div>
+      <form class="searchbox" onsubmit="event.preventDefault();go('search/'+encodeURIComponent(this.q.value))">
+        <input name="q" type="search" placeholder="Search everything…" autocomplete="off">
+      </form>
+      <button class="iconbtn" title="Sign out" onclick="if(confirm('Sign out of the wiki on this device?'))logout()">⎋</button>
+    </div>
+    <nav class="tabs">
+      <button class="tab ${activeTab===''?'active':''}" onclick="go('')">Home</button>
+      ${SECTIONS.map(s=>`<button class="tab ${activeTab===s.id?'active':''}" onclick="go('s/${s.id}')">${s.emoji} ${s.name}</button>`).join("")}
+      <button class="tab ${activeTab==='inbox'?'active':''}" onclick="go('inbox')">📥 Inbox</button>
+    </nav>
+  </div></header>
+  <main><div class="wrap">${inner}</div></main>`;
+}
+function go(route){ location.hash = "#/" + route; }
+function loadingView(tab){ app().innerHTML = shell(`<div class="loading">Loading…</div>`, tab); }
+
+/* ---------- login ---------- */
+function renderLogin(msg) {
+  app().innerHTML = `
+  <div class="login">
+    <div class="big">🏠</div>
+    <h1>MG's Wiki</h1>
+    <p>Paste your access key to unlock. You only do this once per device — it stays signed in.</p>
+    <input id="tok" type="password" placeholder="github_pat_…" autocomplete="off">
+    <div class="err" id="loginerr">${msg ? esc(msg) : ""}</div>
+    <button class="btn primary" id="unlock" style="width:100%">Unlock</button>
+  </div>`;
+  const tryLogin = async () => {
+    const v = $("#tok").value.trim();
+    if (!v) return;
+    $("#unlock").disabled = true; $("#loginerr").textContent = "Checking…";
+    token = v;
+    try {
+      const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/README.md?ref=${CFG.branch}`,
+        { headers: { "Authorization": "Bearer " + v, "Accept": "application/vnd.github+json" } });
+      if (!res.ok) throw new Error();
+      localStorage.setItem("wikiToken", v);
+      route();
+    } catch (e) {
+      token = ""; $("#unlock").disabled = false;
+      $("#loginerr").textContent = "That key didn't work — check it and try again.";
+    }
+  };
+  $("#unlock").onclick = tryLogin;
+  $("#tok").addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+}
+
+/* ---------- markdown rendering ---------- */
+function renderMd(mdText, basePath) {
+  const html = marked.parse(mdText, { mangle:false, headerIds:false });
+  const div = document.createElement("div");
+  div.className = "md";
+  div.innerHTML = html;
+  div.querySelectorAll("a[href]").forEach(a => {
+    const href = a.getAttribute("href");
+    const resolved = resolvePath(basePath, href);
+    if (resolved === null) { if (/^https?:/.test(href)) { a.target = "_blank"; a.rel = "noopener"; } return; }
+    a.addEventListener("click", e => {
+      e.preventDefault();
+      if (resolved.endsWith(".md") || resolved === "") go(resolved ? "p/" + resolved : "");
+      else if (/\.(png|jpe?g|gif|webp|heic)$/i.test(resolved)) openImage(resolved);
+      else go("p/" + resolved);
+    });
+    a.href = "javascript:void(0)";
+  });
+  div.querySelectorAll("img[src]").forEach(img => {
+    const src = img.getAttribute("src");
+    const resolved = resolvePath(basePath, src);
+    if (resolved !== null) { img.removeAttribute("src"); getBlobUrl(resolved).then(u => { if (u) img.src = u; }); }
+  });
+  return div;
+}
+async function openImage(path){ const u = await getBlobUrl(path); if (u) window.open(u, "_blank"); }
+
+/* ---------- views ---------- */
+async function viewHome() {
+  loadingView("");
+  let recent = "";
+  try {
+    const ch = await getFile("_meta/changelog.md");
+    if (ch) {
+      const rows = [...ch.text.matchAll(/^\|\s*([\d-]+)\s*\|\s*(.+?)\s*\|\s*$/gm)]
+        .filter(r => !/^-+$/.test(r[1])).slice(0, 5);
+      if (rows.length) recent = `<div class="card"><b>🕘 Recently filed</b>
+        ${rows.map(r=>`<p class="muted" style="margin:8px 0 0">${esc(r[1])} — ${esc(r[2])}</p>`).join("")}</div>`;
+    }
+  } catch (e) {}
+  const counts = {};
+  try {
+    const tree = await getTree();
+    for (const s of SECTIONS)
+      counts[s.id] = tree.filter(t => t.path.startsWith(s.id + "/") && t.path.endsWith(".md") && !t.path.endsWith("_index.md")).length;
+  } catch (e) {}
+  app().innerHTML = shell(`
+    <div class="card capture">
+      <b>✏️ Quick note</b>
+      <p class="muted" style="margin:4px 0 10px">Dump anything — it lands in your inbox and gets filed automatically.</p>
+      <textarea id="quick" placeholder="Type a thought, a to-do, something to remember…"></textarea>
+      <div class="row">
+        <input type="file" id="photoIn" accept="image/*" style="display:none">
+        <button class="btn ghost" onclick="$('#photoIn').click()">📷 Photo note</button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="saveQuick">Save</button>
+      </div>
+    </div>
+    ${SECTIONS.map(s=>`
+      <a class="card cardlink" href="#/s/${s.id}"><div class="seccard">
+        <span class="sec-emoji">${s.emoji}</span>
+        <div class="grow"><b class="${s.cls}">${s.name}</b><div class="muted">${s.desc}</div></div>
+        <span class="muted">${counts[s.id] ?? ""} ${counts[s.id] === 1 ? "page" : "pages"}</span>
+        <span class="chev">›</span>
+      </div></a>`).join("")}
+    <a class="card cardlink" href="#/inbox"><div class="seccard">
+      <span class="sec-emoji">📥</span>
+      <div class="grow"><b class="accent-inbox">Inbox</b><div class="muted">Raw notes waiting to be filed</div></div>
+      <span class="chev">›</span>
+    </div></a>
+    ${recent}`, "");
+  $("#saveQuick").onclick = saveQuickNote;
+  $("#photoIn").addEventListener("change", uploadPhoto);
+}
+
+async function saveQuickNote() {
+  const text = $("#quick").value.trim();
+  if (!text) { toast("Write something first 🙂"); return; }
+  $("#saveQuick").disabled = true;
+  try {
+    const f = await getFile("inbox/inbox.md", true);
+    const { date, time } = nowStamp();
+    const updated = (f ? f.text.replace(/\s*$/, "") : "# 📥 Inbox\n\n---\n") +
+      `\n\n**${date} ${time}**\n${text}\n`;
+    await putFile("inbox/inbox.md", updated, `Quick note via wiki app (${date})`, f ? f.sha : undefined);
+    $("#quick").value = "";
+    toast("Saved to inbox ✓ — it'll be filed for you");
+  } catch (e) { toast("Couldn't save — check your connection"); }
+  $("#saveQuick").disabled = false;
+}
+
+async function uploadPhoto(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  toast("Uploading photo…");
+  try {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    const b64 = btoa(bin);
+    const { date, time } = nowStamp();
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `inbox/photos/${date}-${time.replace(":","")}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+    await putBinary(path, b64, `Photo note via wiki app (${date})`);
+    toast("Photo saved ✓ — it'll be transcribed and filed");
+  } catch (e) { toast("Upload failed — try again"); }
+  ev.target.value = "";
+}
+
+async function viewSection(id) {
+  const sec = SECTIONS.find(s => s.id === id);
+  if (!sec) return go("");
+  loadingView(id);
+  const entries = await listDir(id);
+  const pages = [];
+  const subdirs = entries.filter(e => e.type === "dir");
+  for (const d of subdirs) {
+    const sub = await listDir(id + "/" + d.name);
+    for (const e of sub) if (e.type === "file" && e.name.endsWith(".md") && e.name !== "_index.md") pages.push(e.path);
+  }
+  for (const e of entries) if (e.type === "file" && e.name.endsWith(".md") && e.name !== "_index.md") pages.push(e.path);
+  const items = await Promise.all(pages.sort().map(async p => {
+    try { const f = await getFile(p); return { path:p, title:titleOf(f.text, prettyName(p)), sum:summaryOf(f.text) }; }
+    catch(e){ return { path:p, title:prettyName(p), sum:"" }; }
+  }));
+  app().innerHTML = shell(`
+    <h1 class="pagetitle"><span class="sec-emoji">${sec.emoji}</span><span class="${sec.cls}">${sec.name}</span></h1>
+    ${items.length === 0 ? `<div class="card muted">Nothing here yet. Add notes from the home page — they'll be filed into pages that appear here.</div>` :
+      items.map(it=>`<a class="card cardlink" href="#/p/${it.path}">
+        <b>${esc(it.title)}</b>${it.sum ? `<div class="muted">${esc(it.sum)}</div>` : ""}
+      </a>`).join("")}`, id);
+}
+
+async function viewPage(path) {
+  const tab = SECTIONS.find(s => path.startsWith(s.id + "/"))?.id ?? (path.startsWith("inbox") ? "inbox" : "");
+  loadingView(tab);
+  const f = await getFile(path, true);
+  if (!f) { app().innerHTML = shell(`<div class="card">That page doesn't exist (anymore). <a href="#/">Go home</a>.</div>`, tab); return; }
+  app().innerHTML = shell(`<div class="card" id="pagebody"></div>`, tab);
+  $("#pagebody").appendChild(renderMd(f.text, path));
+}
+
+async function viewInbox() {
+  loadingView("inbox");
+  const f = await getFile("inbox/inbox.md", true);
+  let photosHtml = "";
+  const photos = (await listDir("inbox/photos")).filter(e => e.type === "file" && /\.(png|jpe?g|gif|webp|heic)$/i.test(e.name));
+  if (photos.length) {
+    photosHtml = `<div class="card"><b>📷 Photos waiting to be transcribed</b>
+      <div class="photo-grid" style="margin-top:10px">${photos.map(p=>`<img data-p="${esc(p.path)}" alt="">`).join("")}</div></div>`;
+  }
+  app().innerHTML = shell(`<div class="card" id="pagebody"></div>${photosHtml}`, "inbox");
+  if (f) $("#pagebody").appendChild(renderMd(f.text, "inbox/inbox.md"));
+  document.querySelectorAll(".photo-grid img").forEach(img => getBlobUrl(img.dataset.p).then(u => { if (u) img.src = u; }));
+}
+
+async function viewSearch(q) {
+  loadingView("");
+  q = decodeURIComponent(q || "").trim();
+  if (!q) return go("");
+  const tree = await getTree();
+  const mdFiles = tree.filter(t => t.type === "blob" && t.path.endsWith(".md") && !t.path.startsWith("_meta/processed"));
+  const needle = q.toLowerCase();
+  const results = [];
+  await Promise.all(mdFiles.map(async t => {
+    try {
+      const f = await getFile(t.path);
+      const idx = f.text.toLowerCase().indexOf(needle);
+      if (idx === -1) return;
+      const start = Math.max(0, idx - 60);
+      const raw = f.text.slice(start, idx + q.length + 90).replace(/\n/g, " ");
+      const snippet = esc(raw).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "ig"), m => `<mark>${m}</mark>`);
+      results.push({ path:t.path, title:titleOf(f.text, prettyName(t.path)), snippet });
+    } catch(e){}
+  }));
+  results.sort((a,b) => a.path.localeCompare(b.path));
+  app().innerHTML = shell(`
+    <h1 class="pagetitle">🔍 “${esc(q)}”</h1>
+    ${results.length === 0 ? `<div class="card muted">No matches. Everything in the wiki was searched.</div>` :
+      results.map(r=>`<a class="card cardlink result" href="#/p/${r.path}">
+        <b>${esc(r.title)}</b> <span class="muted">· ${esc(r.path)}</span>
+        <div class="snippet">…${r.snippet}…</div></a>`).join("")}`, "");
+}
+
+/* ---------- router ---------- */
+async function route() {
+  if (!token) return renderLogin();
+  const h = location.hash.replace(/^#\/?/, "");
+  try {
+    if (h === "") await viewHome();
+    else if (h.startsWith("s/")) await viewSection(h.slice(2));
+    else if (h.startsWith("p/")) await viewPage(decodeURI(h.slice(2)));
+    else if (h === "inbox") await viewInbox();
+    else if (h.startsWith("search/")) await viewSearch(h.slice(7));
+    else await viewHome();
+  } catch (e) {
+    if (e.message !== "unauthorized")
+      app().innerHTML = shell(`<div class="card">Something went wrong loading this view (${esc(e.message)}). <a href="javascript:route()">Try again</a>.</div>`, "");
+  }
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
