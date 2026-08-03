@@ -148,6 +148,17 @@ const SECTIONS = [
   { id:"learning", emoji:"📚", name:"Learning", desc:"Study notes, how-tos, reference",          cls:"accent-learning" },
 ];
 let token = localStorage.getItem("wikiToken") || "";
+const VAULT = {"salt":"pjIuLJdVNvtBzhgoHSctIQ==","iv":"DrY9/nja94Gjnbor","ct":"CtaVAi1I1cz2mcYqiuCECO/cKyGbsKhDvdVf20B5PIPXLO7CRDq3lZ3Ke4AKOqGi14lGg6UxxnKr63lre27HtMv+OT5o3EhKZNZXA2pJpV287BYrum58ajHXkjhWOM2083s6V7MASy3e0/HupQ==","iter":600000};
+async function unlockVault(password) {
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const enc = new TextEncoder();
+  const keyMat = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: b(VAULT.salt), iterations: VAULT.iter, hash: "SHA-256" },
+    keyMat, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(VAULT.iv) }, key, b(VAULT.ct));
+  return new TextDecoder().decode(pt);
+}
 const cache = { files:{}, dirs:{}, tree:null, blobs:{} };
 const $ = sel => document.querySelector(sel);
 const app = () => $("#app");
@@ -286,33 +297,41 @@ async function refreshAll(btn){
 function loadingView(tab){ app().innerHTML = shell(`<div class="loading">Loading…</div>`, tab); }
 
 /* ---------- login ---------- */
-function renderLogin(msg) {
+function renderLogin(msg, keyMode) {
   app().innerHTML = `
   <div class="login">
     <div class="big">🌼🌸🌻</div>
     <h1>MG's Wiki</h1>
-    <p>Paste your access key to unlock. You only do this once per device — it stays signed in.</p>
-    <input id="tok" type="password" placeholder="github_pat_…" autocomplete="off">
+    <p>${keyMode ? "Paste your GitHub access key." : "Enter your password to unlock. You only do this once per device — it stays signed in."}</p>
+    <input id="tok" type="password" placeholder="${keyMode ? "github_pat_…" : "Password"}" autocomplete="${keyMode ? "off" : "current-password"}">
     <div class="err" id="loginerr">${msg ? esc(msg) : ""}</div>
     <button class="btn primary" id="unlock" style="width:100%">Unlock</button>
+    <p style="margin-top:14px"><a href="javascript:void(0)" id="altmode" class="muted">${keyMode ? "← back to password" : "use access key instead"}</a></p>
   </div>`;
+  const validate = async (tok) => {
+    const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/README.md?ref=${CFG.branch}`,
+      { cache: "no-store", headers: { "Authorization": "Bearer " + tok, "Accept": "application/vnd.github+json" } });
+    return res.ok;
+  };
   const tryLogin = async () => {
     const v = $("#tok").value.trim();
     if (!v) return;
-    $("#unlock").disabled = true; $("#loginerr").textContent = "Checking…";
-    token = v;
+    $("#unlock").disabled = true; $("#loginerr").textContent = keyMode ? "Checking…" : "Unlocking…";
     try {
-      const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/README.md?ref=${CFG.branch}`,
-        { headers: { "Authorization": "Bearer " + v, "Accept": "application/vnd.github+json" } });
-      if (!res.ok) throw new Error();
-      localStorage.setItem("wikiToken", v);
+      const tok = keyMode ? v : await unlockVault(v);
+      if (!(await validate(tok))) throw new Error("badtoken");
+      token = tok;
+      localStorage.setItem("wikiToken", tok);
       route();
     } catch (e) {
       token = ""; $("#unlock").disabled = false;
-      $("#loginerr").textContent = "That key didn't work — check it and try again.";
+      $("#loginerr").textContent = e.message === "badtoken"
+        ? "The key inside is no longer valid — MG needs to update it with Claude."
+        : (keyMode ? "That key didn't work — check it and try again." : "Wrong password — try again.");
     }
   };
   $("#unlock").onclick = tryLogin;
+  $("#altmode").onclick = () => renderLogin("", !keyMode);
   $("#tok").addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
 }
 
