@@ -161,6 +161,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
+const APP_VERSION = "2026-08-04.2 · cycle";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -309,9 +310,10 @@ function shell(inner, activeTab) {
 function go(route){ location.hash = "#/" + route; }
 async function refreshAll(btn){
   if (btn) btn.classList.add("spin");
-  cache.files = {}; cache.dirs = {}; cache.tree = null;
-  await route();
-  toast("Up to date ✓");
+  // full reload with a cache-busting query so the app CODE updates too, not just data
+  const u = new URL(location.href);
+  u.searchParams.set("r", String(Math.floor(performance.now())));
+  location.replace(u.toString());
 }
 function loadingView(tab){ app().innerHTML = shell(`<div class="loading">Loading…</div>`, tab); }
 
@@ -517,7 +519,8 @@ async function viewHome() {
     </div></a>
     ${recent}
     ${todayCard}
-    ${todoCard}`, "");
+    ${todoCard}
+    <div class="muted" style="text-align:center;font-size:12px;padding:6px 0 2px">v${esc(APP_VERSION)}</div>`, "");
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
   document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
