@@ -24,6 +24,8 @@
     --brand:#8a5fb8;         /* lilac — filled buttons & header circles */
     --deep:#6f4a99;          /* deep lilac — filled buttons, active tab, toast */
     --gold:#c8890f;          /* dark yellow (icon center) — Today accent */
+    --tint:#f1ebf8;          /* light lilac pastel — home cards & idle tabs */
+    --yellowbtn:#edb230;     /* golden yellow — Photo note button */
     --work:#c76c1a;          /* orange marigold */
     --personal:#8f63bf;      /* lilac */
     --learning:#a98600;      /* buttercup yellow */
@@ -58,9 +60,10 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   nav.tabs{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;-webkit-overflow-scrolling:touch}
   nav.tabs::-webkit-scrollbar{display:none}
-  .tab{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 13px;
+  .tab{border:1px solid var(--line);background:var(--tint);border-radius:99px;padding:5px 13px;
     font-size:13.5px;white-space:nowrap;cursor:pointer;color:var(--ink)}
   .tab.active{background:var(--deep);color:#fff;border-color:var(--deep)}
+  ::selection{background:#f7e59b}
 
   main{padding:18px 0}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
@@ -84,7 +87,11 @@
   .btn.primary{background:var(--deep);color:#fff}
   .btn.primary:disabled{opacity:.5}
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+  .btn.yellow{background:var(--yellowbtn);color:#4a3708}
   .spacer{flex:1}
+  /* home: light-lilac tinted cards, but keep the Quick Note card white */
+  .hometint .card{background:var(--tint)}
+  .hometint .card.capture{background:var(--card)}
 
   /* markdown content */
   .md h1{font-size:23px;line-height:1.3;margin:6px 0 10px}
@@ -163,7 +170,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.6 · lilac";
+const APP_VERSION = "2026-08-04.7 · lilac";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -500,13 +507,14 @@ async function viewHome() {
         <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
       </div>`).join("")}</div>`;
   app().innerHTML = shell(`
+    <div class="hometint">
     <div class="card capture">
       <b>✏️ Quick note</b>
       <p class="muted" style="margin:4px 0 10px">Dump anything — it lands in your inbox and gets filed automatically.</p>
       <textarea id="quick" placeholder="Type a thought, a to-do, something to remember…"></textarea>
       <div class="row">
         <input type="file" id="photoIn" accept="image/*" style="display:none">
-        <button class="btn ghost" onclick="$('#photoIn').click()">📷 Photo note</button>
+        <button class="btn yellow" onclick="$('#photoIn').click()">📷 Photo note</button>
         <div class="spacer"></div>
         <button class="btn primary" id="saveQuick">Save</button>
       </div>
@@ -526,6 +534,7 @@ async function viewHome() {
     ${recent}
     ${todayCard}
     ${todoCard}
+    </div>
     <div class="muted" style="text-align:center;font-size:12px;padding:6px 0 2px">v${esc(APP_VERSION)}</div>`, "");
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
