@@ -459,6 +459,32 @@ async function viewHome() {
       counts[s.id] = tree.filter(t => t.path.startsWith(s.id + "/") && t.path.endsWith(".md") && !t.path.endsWith("_index.md")).length;
     todos = await pendingTodos();
   } catch (e) {}
+  let todayCard = "";
+  try {
+    const tf = await getFile("_meta/today.md", true);
+    if (tf) {
+      const phase = (tf.text.match(/\*\*Phase:\*\*\s*(.+)$/m) || [])[1] || "";
+      const good = (tf.text.match(/^_([^_\n]+)_\s*$/m) || [])[1] || "";
+      const norm = s => s.replace(/\s+/g, " ").trim();
+      const cands = [...tf.text.matchAll(/^- \[ \] (.+?)\s*<!--\s*src:(\S+)\s*-->/gm)]
+        .map(m => ({ text: norm(m[1]), src: m[2] }));
+      const items = [];
+      for (const c of cands) {
+        const p = todos.find(t => t.path === c.src && norm(t.text) === c.text);
+        if (p) items.push(p);
+        if (items.length >= 5) break;
+      }
+      window._todayItems = items;
+      todayCard = `<div class="card" id="todaycard">
+        <b style="color:var(--poppy)">🌸 Optimal tasks for today</b>
+        ${phase ? `<div class="muted" style="margin-top:2px">${esc(phase)}${good ? " · " + esc(good) : ""}</div>` : ""}
+        ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
+          items.map((t, i) => `<div class="todo-item">
+            <input type="checkbox" data-i="${i}">
+            <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
+          </div>`).join("")}</div>`;
+    }
+  } catch (e) {}
   const todoCard = `<div class="card" id="todocard"><b class="accent-todo">☑️ To-dos</b>
     ${todos.length === 0 ? `<div class="muted" style="margin-top:8px">Nothing pending — all clear 🎉</div>` :
       todos.map((t, i) => `<div class="todo-item">
@@ -490,12 +516,17 @@ async function viewHome() {
       <span class="chev">›</span>
     </div></a>
     ${recent}
+    ${todayCard}
     ${todoCard}`, "");
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
   document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
     const t = todos[Number(box.dataset.i)];
     box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
+  });
+  document.querySelectorAll("#todaycard input[type=checkbox]").forEach(box => {
+    const t = (window._todayItems || [])[Number(box.dataset.i)];
+    if (t) box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
   });
 }
 
