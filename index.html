@@ -172,7 +172,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.8 · lilac";
+const APP_VERSION = "2026-08-04.9 · receipts";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -513,12 +513,13 @@ async function viewHome() {
       <b>✏️ Quick note</b>
       <p class="muted" style="margin:4px 0 10px">Dump anything — it lands in your inbox and gets filed automatically.</p>
       <textarea id="quick" placeholder="Type a thought, a to-do, something to remember…"></textarea>
-      <div class="row">
-        <input type="file" id="photoIn" accept="image/*" style="display:none">
-        <button class="btn yellow" onclick="$('#photoIn').click()">📷 Photo note</button>
-        <div class="spacer"></div>
-        <button class="btn primary" id="saveQuick">Save</button>
+      <input type="file" id="photoIn" accept="image/*" style="display:none">
+      <input type="file" id="rcptIn" accept="image/*" style="display:none">
+      <div class="row" style="gap:8px">
+        <button class="btn yellow" style="flex:1" onclick="$('#photoIn').click()">📷 Photo</button>
+        <button class="btn ghost" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
       </div>
+      <button class="btn primary" id="saveQuick" style="width:100%;margin-top:8px">Save</button>
     </div>
     ${SECTIONS.map(s=>`
       <a class="card cardlink" href="#/s/${s.id}"><div class="seccard">
@@ -538,6 +539,7 @@ async function viewHome() {
     <div class="muted" style="text-align:center;font-size:12px;padding:6px 0 2px">v${esc(APP_VERSION)}</div>`, "");
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
+  $("#rcptIn").addEventListener("change", uploadReceipt);
   document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
     const t = todos[Number(box.dataset.i)];
     box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
@@ -564,10 +566,10 @@ async function saveQuickNote() {
   $("#saveQuick").disabled = false;
 }
 
-async function uploadPhoto(ev) {
+async function uploadImage(ev, folder, uploadingMsg, doneMsg, kind) {
   const file = ev.target.files[0];
   if (!file) return;
-  toast("Uploading photo…");
+  toast(uploadingMsg);
   try {
     const buf = await file.arrayBuffer();
     const bytes = new Uint8Array(buf);
@@ -577,12 +579,14 @@ async function uploadPhoto(ev) {
     const b64 = btoa(bin);
     const { date, time } = nowStamp();
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `inbox/photos/${date}-${time.replace(":","")}-${Math.random().toString(36).slice(2,6)}.${ext}`;
-    await putBinary(path, b64, `Photo note via wiki app (${date})`);
-    toast("Photo saved ✓ — it'll be transcribed and filed");
+    const path = `${folder}/${date}-${time.replace(":","")}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+    await putBinary(path, b64, `${kind} via wiki app (${date})`);
+    toast(doneMsg);
   } catch (e) { toast("Upload failed — try again"); }
   ev.target.value = "";
 }
+const uploadPhoto = ev => uploadImage(ev, "inbox/photos", "Uploading photo…", "Photo saved ✓ — it'll be transcribed and filed", "Photo note");
+const uploadReceipt = ev => uploadImage(ev, "inbox/receipts", "Uploading receipt…", "Receipt saved ✓ — it'll be logged for reimbursement", "Receipt");
 
 async function viewSection(id) {
   const sec = SECTIONS.find(s => s.id === id);
