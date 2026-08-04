@@ -161,7 +161,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.2 · cycle";
+const APP_VERSION = "2026-08-04.3 · cycle";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -465,8 +465,11 @@ async function viewHome() {
   try {
     const tf = await getFile("_meta/today.md", true);
     if (tf) {
-      const phase = (tf.text.match(/\*\*Phase:\*\*\s*(.+)$/m) || [])[1] || "";
+      const phaseRaw = (tf.text.match(/\*\*Phase:\*\*\s*(.+)$/m) || [])[1] || "";
       const good = (tf.text.match(/^_([^_\n]+)_\s*$/m) || [])[1] || "";
+      let phaseLabel = phaseRaw, dayTitle = "";
+      const dm = phaseRaw.match(/^(.*?)\s*[—–-]\s*(day\s+\d+\s+of\s+\d+)\s*$/i);
+      if (dm) { phaseLabel = dm[1].trim(); dayTitle = dm[2].charAt(0).toUpperCase() + dm[2].slice(1); }
       const norm = s => s.replace(/\s+/g, " ").trim();
       const cands = [...tf.text.matchAll(/^- \[ \] (.+?)\s*<!--\s*src:(\S+)\s*-->/gm)]
         .map(m => ({ text: norm(m[1]), src: m[2] }));
@@ -479,7 +482,8 @@ async function viewHome() {
       window._todayItems = items;
       todayCard = `<div class="card" id="todaycard">
         <b style="color:var(--poppy)">🌸 Optimal tasks for today</b>
-        ${phase ? `<div class="muted" style="margin-top:2px">${esc(phase)}${good ? " · " + esc(good) : ""}</div>` : ""}
+        ${dayTitle ? `<div style="color:var(--poppy);font-weight:700;font-size:17px;margin-top:5px">${esc(dayTitle)}</div>` : ""}
+        ${phaseLabel ? `<div class="muted" style="margin-top:3px">${esc(phaseLabel)}${good ? " — " + esc(good) : ""}</div>` : ""}
         ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
           items.map((t, i) => `<div class="todo-item">
             <input type="checkbox" data-i="${i}">
