@@ -503,10 +503,10 @@ async function viewHome() {
       }
       window._todayItems = items;
       todayCard = `<div class="card" id="todaycard">
-        <b style="color:var(--gold);font-size:17px">🌼 Optimal tasks for today</b>
+        <b style="color:var(--gold);font-size:17px">🌹 Optimal tasks for today</b>
         ${(phaseLabel || dayTitle) ? `<div style="color:var(--gold);font-weight:600;font-size:13.5px;margin-top:4px;line-height:1.45">${esc(phaseLabel)}${dayTitle ? (phaseLabel ? "<br>" : "") + esc(dayTitle) : ""}</div>` : ""}
         ${good ? `<div class="muted" style="margin-top:3px">${esc(good)}</div>` : ""}
-        ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
+        ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌹</div>` :
           items.map((t, i) => `<div class="todo-item">
             <input type="checkbox" data-i="${i}">
             <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
