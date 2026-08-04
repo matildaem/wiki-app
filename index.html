@@ -161,7 +161,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.3 · cycle";
+const APP_VERSION = "2026-08-04.4 · cycle";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -481,9 +481,9 @@ async function viewHome() {
       }
       window._todayItems = items;
       todayCard = `<div class="card" id="todaycard">
-        <b style="color:var(--poppy)">🌸 Optimal tasks for today</b>
-        ${dayTitle ? `<div style="color:var(--poppy);font-weight:700;font-size:17px;margin-top:5px">${esc(dayTitle)}</div>` : ""}
-        ${phaseLabel ? `<div class="muted" style="margin-top:3px">${esc(phaseLabel)}${good ? " — " + esc(good) : ""}</div>` : ""}
+        <b style="color:var(--poppy);font-size:17px">🌸 Optimal tasks for today</b>
+        ${(phaseLabel || dayTitle) ? `<div style="color:var(--poppy);font-weight:600;font-size:13.5px;margin-top:4px">${esc([phaseLabel, dayTitle].filter(Boolean).join(" · "))}</div>` : ""}
+        ${good ? `<div class="muted" style="margin-top:3px">${esc(good)}</div>` : ""}
         ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
           items.map((t, i) => `<div class="todo-item">
             <input type="checkbox" data-i="${i}">
