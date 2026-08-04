@@ -25,7 +25,8 @@
     --deep:#997adb;          /* Pantone 928 C — filled buttons, active tab, toast */
     --gold:#c8890f;          /* dark yellow (icon center) — Today accent */
     --tint:#f1ebf8;          /* light lilac pastel — home cards & idle tabs */
-    --yellowbtn:#edb230;     /* golden yellow — Photo note button */
+    --yellowbtn:#fee715;     /* Blazing Yellow (Pantone 12-0643 TCX) — Photo button + gradient */
+    --receipt:#ffe77a;       /* Pantone 924 U — Receipt button */
     --work:#c76c1a;          /* orange marigold */
     --personal:#997adb;      /* Pantone 928 C */
     --learning:#a98600;      /* buttercup yellow */
@@ -93,7 +94,7 @@
   .btn.primary:disabled{opacity:.5}
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
-  .btn.paleyellow{background:#fbf1c9;color:#6a5410;border:1px solid #f1e2a0}
+  .btn.paleyellow{background:var(--receipt);color:#6a5410;border:1px solid #f2d886}
   .spacer{flex:1}
 
   /* markdown content */
@@ -173,7 +174,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.11 · 928C";
+const APP_VERSION = "2026-08-04.12 · yellows";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
