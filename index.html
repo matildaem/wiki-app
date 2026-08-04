@@ -93,6 +93,7 @@
   .btn.primary:disabled{opacity:.5}
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
+  .btn.paleyellow{background:#fbf1c9;color:#6a5410;border:1px solid #f1e2a0}
   .spacer{flex:1}
 
   /* markdown content */
@@ -172,7 +173,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.9 · receipts";
+const APP_VERSION = "2026-08-04.10 · receipts";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -517,7 +518,7 @@ async function viewHome() {
       <input type="file" id="rcptIn" accept="image/*" style="display:none">
       <div class="row" style="gap:8px">
         <button class="btn yellow" style="flex:1" onclick="$('#photoIn').click()">📷 Photo</button>
-        <button class="btn ghost" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
+        <button class="btn paleyellow" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
       </div>
       <button class="btn primary" id="saveQuick" style="width:100%;margin-top:8px">Save</button>
     </div>
