@@ -20,14 +20,16 @@
     --ink:#302d20;           /* dark earth */
     --muted:#827c67;         /* dry grass */
     --line:#e6e1cc;          /* straw */
-    --accent:#5661c2;        /* cornflower */
+    --accent:#8560b8;        /* lilac (links, focus) */
+    --brand:#8a5fb8;         /* lilac — filled buttons & header circles */
+    --deep:#6f4a99;          /* deep lilac — filled buttons, active tab, toast */
+    --gold:#c8890f;          /* dark yellow (icon center) — Today accent */
     --work:#c76c1a;          /* orange marigold */
     --personal:#8f63bf;      /* lilac */
     --learning:#a98600;      /* buttercup yellow */
     --inbox:#c74f74;         /* wild-rose pink */
     --todo:#569244;          /* light leaf green */
-    --deep:#3d5f31;          /* deep leaf green */
-    --poppy:#c8442c;         /* poppy red */
+    --poppy:#c8442c;         /* poppy red (legacy) */
     --radius:14px; --shadow:0 1px 3px rgba(61,58,20,.07),0 4px 14px rgba(61,58,20,.06);
   }
   *{box-sizing:border-box}
@@ -48,8 +50,8 @@
   .searchbox input{flex:1;min-width:0;border:1px solid var(--line);border-radius:99px;padding:7px 14px;
     font-size:15px;background:var(--card);outline:none}
   .searchbox input:focus{border-color:var(--accent)}
-  .iconbtn{border:1px solid var(--line);background:var(--card);width:42px;height:42px;border-radius:50%;
-    font-size:21px;line-height:1;cursor:pointer;color:var(--ink);flex-shrink:0;
+  .iconbtn{border:none;background:var(--brand);width:42px;height:42px;border-radius:50%;
+    font-size:20px;line-height:1;cursor:pointer;color:#fff;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
   .iconbtn:active{transform:scale(.93)}
   .iconbtn.spin{animation:spin .8s linear infinite}
@@ -161,7 +163,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.5 · cycle";
+const APP_VERSION = "2026-08-04.6 · lilac";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -481,8 +483,8 @@ async function viewHome() {
       }
       window._todayItems = items;
       todayCard = `<div class="card" id="todaycard">
-        <b style="color:var(--poppy);font-size:17px">🌸 Optimal tasks for today</b>
-        ${(phaseLabel || dayTitle) ? `<div style="color:var(--poppy);font-weight:600;font-size:13.5px;margin-top:4px;line-height:1.45">${esc(phaseLabel)}${dayTitle ? (phaseLabel ? "<br>" : "") + esc(dayTitle) : ""}</div>` : ""}
+        <b style="color:var(--gold);font-size:17px">🌼 Optimal tasks for today</b>
+        ${(phaseLabel || dayTitle) ? `<div style="color:var(--gold);font-weight:600;font-size:13.5px;margin-top:4px;line-height:1.45">${esc(phaseLabel)}${dayTitle ? (phaseLabel ? "<br>" : "") + esc(dayTitle) : ""}</div>` : ""}
         ${good ? `<div class="muted" style="margin-top:3px">${esc(good)}</div>` : ""}
         ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
           items.map((t, i) => `<div class="todo-item">
