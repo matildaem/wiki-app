@@ -118,6 +118,8 @@
   .md pre code{background:none;padding:0}
   .md img{max-width:100%;border-radius:10px}
   .md hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+  /* asterisk-wrapped text you write becomes a blazing-yellow highlight */
+  .hl{background:var(--yellowbtn);color:var(--ink);border-radius:3px;padding:0 3px;font-style:normal;font-weight:inherit}
   .md li input[type=checkbox]{width:19px;height:19px;accent-color:var(--purple);margin-right:8px;vertical-align:-4px;cursor:pointer}
   .md li input[type=checkbox]:disabled{cursor:default}
   .md li:has(> input[type=checkbox]){list-style:none;margin-left:-22px}
@@ -127,6 +129,8 @@
   #todaycard{padding-left:18px}
   #todaycard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
     background:linear-gradient(var(--purple),var(--yellowbtn))}
+  .ritual{display:flex;gap:10px;margin-top:9px;align-items:baseline}
+  .ritual .rdot{color:var(--purple);font-size:10px;flex-shrink:0}
   .todo-item .grow{flex:1}
   .todo-item .src{font-size:12.5px}
 
@@ -178,7 +182,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.13 · brand";
+const APP_VERSION = "2026-08-04.16 · rituals";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -282,6 +286,12 @@ async function getBlobUrl(path) {
 
 /* ---------- helpers ---------- */
 function esc(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+/* escape, then turn *text* / **text** into a blazing-yellow highlight */
+function hlInline(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, '<span class="hl">$1</span>')
+    .replace(/\*([^*\n]+)\*/g, '<span class="hl">$1</span>');
+}
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
 function titleOf(md, fallback){ const m = md.match(/^#\s+(.+)$/m); return m ? m[1].trim() : fallback; }
 function summaryOf(md){ const m = md.match(/^_([^_]+)_\s*$/m) || md.match(/^\*([^*]+)\*\s*$/m); return m ? m[1].trim() : ""; }
@@ -379,8 +389,14 @@ function renderLogin(msg, keyMode) {
 }
 
 /* ---------- markdown rendering ---------- */
+/* convert *text* / **text** (asterisks only — underscores stay normal italics) to a highlight span before markdown */
+function protectHighlights(md) {
+  return md
+    .replace(/\*\*([^*\n]+)\*\*/g, '<span class="hl">$1</span>')
+    .replace(/\*([^*\n]+)\*/g, '<span class="hl">$1</span>');
+}
 function renderMd(mdText, basePath) {
-  const html = marked.parse(mdText, { mangle:false, headerIds:false });
+  const html = marked.parse(protectHighlights(mdText), { mangle:false, headerIds:false });
   const div = document.createElement("div");
   div.className = "md";
   div.innerHTML = html;
@@ -503,21 +519,30 @@ async function viewHome() {
       }
       window._todayItems = items;
       todayCard = `<div class="card" id="todaycard">
-        <b style="color:var(--gold);font-size:17px">🌹 Optimal tasks for today</b>
+        <b style="color:var(--gold);font-size:17px">🌸 Optimal tasks for today</b>
         ${(phaseLabel || dayTitle) ? `<div style="color:var(--gold);font-weight:600;font-size:13.5px;margin-top:4px;line-height:1.45">${esc(phaseLabel)}${dayTitle ? (phaseLabel ? "<br>" : "") + esc(dayTitle) : ""}</div>` : ""}
         ${good ? `<div class="muted" style="margin-top:3px">${esc(good)}</div>` : ""}
-        ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌹</div>` :
+        ${items.length === 0 ? `<div class="muted" style="margin-top:8px">All phase-aligned tasks are done — anything else can wait for its moment 🌼</div>` :
           items.map((t, i) => `<div class="todo-item">
             <input type="checkbox" data-i="${i}">
-            <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
+            <div class="grow">${hlInline(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
           </div>`).join("")}</div>`;
+    }
+  } catch (e) {}
+  let ritualsCard = "";
+  try {
+    const rf = await getFile("_meta/rituals.md", true);
+    if (rf) {
+      const items = [...rf.text.matchAll(/^\s*[-*]\s+(.+?)\s*$/gm)].map(m => m[1]);
+      if (items.length) ritualsCard = `<div class="card"><b style="color:var(--purple)">🌿 Daily Rituals</b>
+        ${items.map(it => `<div class="ritual"><span class="rdot">◆</span><span>${hlInline(it)}</span></div>`).join("")}</div>`;
     }
   } catch (e) {}
   const todoCard = `<div class="card" id="todocard"><b class="accent-todo">☑️ To-dos</b>
     ${todos.length === 0 ? `<div class="muted" style="margin-top:8px">Nothing pending — all clear 🎉</div>` :
       todos.map((t, i) => `<div class="todo-item">
         <input type="checkbox" data-i="${i}">
-        <div class="grow">${esc(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
+        <div class="grow">${hlInline(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
       </div>`).join("")}</div>`;
   app().innerHTML = shell(`
     <div class="card capture">
@@ -546,6 +571,7 @@ async function viewHome() {
     </div></a>
     ${recent}
     ${todayCard}
+    ${ritualsCard}
     ${todoCard}
     <div class="muted" style="text-align:center;font-size:12px;padding:6px 0 2px">v${esc(APP_VERSION)}</div>`, "");
   $("#saveQuick").onclick = saveQuickNote;
