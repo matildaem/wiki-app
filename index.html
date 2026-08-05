@@ -81,8 +81,9 @@
     border-radius:13px;font-size:23px;margin-right:11px;flex-shrink:0}
   .chip-work{background:#f6e7d5} .chip-personal{background:#efe8f8}
   .chip-learning{background:#f6eecb} .chip-inbox{background:#f7e3ea}
+  .chip-recent{background:#eceada}
   .seccard{display:flex;align-items:center;gap:4px}
-  .seccard .grow{flex:1}
+  .seccard .grow{flex:1;min-width:0}
   .seccard b{font-size:16.5px}
   .chev{color:var(--muted)}
 
@@ -182,7 +183,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-04.16 · rituals";
+const APP_VERSION = "2026-08-05.17 · slim recent";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -486,9 +487,12 @@ async function viewHome() {
     const ch = await getFile("_meta/changelog.md");
     if (ch) {
       const rows = [...ch.text.matchAll(/^\|\s*([\d-]+)\s*\|\s*(.+?)\s*\|\s*$/gm)]
-        .filter(r => !/^-+$/.test(r[1])).slice(0, 5);
-      if (rows.length) recent = `<a class="card cardlink" href="#/p/_meta/changelog.md"><b>🕘 Recently filed</b> <span class="chev">›</span>
-        ${rows.map(r=>`<p class="muted" style="margin:8px 0 0">${esc(r[1])} — ${esc(r[2])}</p>`).join("")}</a>`;
+        .filter(r => !/^-+$/.test(r[1])).slice(0, 1);
+      if (rows.length) recent = `<a class="card cardlink" href="#/p/_meta/changelog.md"><div class="seccard">
+        <span class="sec-emoji chip-recent">🕘</span>
+        <div class="grow"><b>Recently filed</b><div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(rows[0][1])} — ${esc(rows[0][2])}</div></div>
+        <span class="chev">›</span>
+      </div></a>`;
     }
   } catch (e) {}
   const counts = {};
@@ -570,8 +574,8 @@ async function viewHome() {
       <span class="chev">›</span>
     </div></a>
     ${recent}
-    ${todayCard}
     ${ritualsCard}
+    ${todayCard}
     ${todoCard}
     <div class="muted" style="text-align:center;font-size:12px;padding:6px 0 2px">v${esc(APP_VERSION)}</div>`, "");
   $("#saveQuick").onclick = saveQuickNote;
