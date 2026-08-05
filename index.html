@@ -99,7 +99,7 @@
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
   .btn.paleyellow{background:var(--receipt);color:#6a5410;border:1px solid #f2d886}
-  .btn.lavender{background:#efe8f8;color:#4a3a6b;border:1px solid #ddd0f0}
+  .btn.lightyellow{background:#fff6d0;color:#6a5410;border:1px solid #f6e7a8}
   .spacer{flex:1}
 
   /* markdown content */
@@ -184,7 +184,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-05.19 · transcripts";
+const APP_VERSION = "2026-08-05.20 · lighter yellow";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -560,7 +560,7 @@ async function viewHome() {
       <div class="row" style="gap:8px">
         <button class="btn yellow" style="flex:1" onclick="$('#photoIn').click()">📷 Photo</button>
         <button class="btn paleyellow" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
-        <button class="btn lavender" style="flex:1" onclick="$('#transIn').click()">📝 Transcript</button>
+        <button class="btn lightyellow" style="flex:1" onclick="$('#transIn').click()">📝 Transcript</button>
       </div>
       <button class="btn primary" id="saveQuick" style="width:100%;margin-top:8px">Save</button>
     </div>
