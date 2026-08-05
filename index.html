@@ -99,6 +99,7 @@
   .btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
   .btn.paleyellow{background:var(--receipt);color:#6a5410;border:1px solid #f2d886}
+  .btn.lavender{background:#efe8f8;color:#4a3a6b;border:1px solid #ddd0f0}
   .spacer{flex:1}
 
   /* markdown content */
@@ -183,7 +184,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-05.18 · new vault";
+const APP_VERSION = "2026-08-05.19 · transcripts";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -555,9 +556,11 @@ async function viewHome() {
       <textarea id="quick" placeholder="Type a thought, a to-do, something to remember…"></textarea>
       <input type="file" id="photoIn" accept="image/*" style="display:none">
       <input type="file" id="rcptIn" accept="image/*" style="display:none">
+      <input type="file" id="transIn" accept=".txt,.vtt,.srt,.md,text/plain" style="display:none">
       <div class="row" style="gap:8px">
         <button class="btn yellow" style="flex:1" onclick="$('#photoIn').click()">📷 Photo</button>
         <button class="btn paleyellow" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
+        <button class="btn lavender" style="flex:1" onclick="$('#transIn').click()">📝 Transcript</button>
       </div>
       <button class="btn primary" id="saveQuick" style="width:100%;margin-top:8px">Save</button>
     </div>
@@ -581,6 +584,7 @@ async function viewHome() {
   $("#saveQuick").onclick = saveQuickNote;
   $("#photoIn").addEventListener("change", uploadPhoto);
   $("#rcptIn").addEventListener("change", uploadReceipt);
+  $("#transIn").addEventListener("change", uploadTranscript);
   document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
     const t = todos[Number(box.dataset.i)];
     box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
@@ -628,6 +632,26 @@ async function uploadImage(ev, folder, uploadingMsg, doneMsg, kind) {
 }
 const uploadPhoto = ev => uploadImage(ev, "inbox/photos", "Uploading photo…", "Photo saved ✓ — it'll be transcribed and filed", "Photo note");
 const uploadReceipt = ev => uploadImage(ev, "inbox/receipts", "Uploading receipt…", "Receipt saved ✓ — it'll be logged for reimbursement", "Receipt");
+
+async function uploadTranscript(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 900 * 1024) { toast("File too big (~1 MB max) — export as plain text"); ev.target.value = ""; return; }
+  const title = (prompt("Which meeting is this? (title — optional)") || "").trim();
+  toast("Uploading transcript…");
+  try {
+    const text = await file.text();
+    const { date, time } = nowStamp();
+    const slug = (title || file.name.replace(/\.[^.]+$/, "")).toLowerCase()
+      .normalize("NFD").replace(/\p{M}/gu, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "meeting";
+    const ext = (file.name.split(".").pop() || "txt").toLowerCase();
+    const header = `Meeting: ${title || file.name}\nUploaded: ${date} ${time}\n---\n\n`;
+    await putFile(`inbox/transcripts/${date}-${slug}.${ext}`, header + text, `Transcript via wiki app (${date})`);
+    toast("Transcript saved ✓ — it'll be digested and filed");
+  } catch (e) { toast("Upload failed — try again"); }
+  ev.target.value = "";
+}
 
 async function viewSection(id) {
   const sec = SECTIONS.find(s => s.id === id);
