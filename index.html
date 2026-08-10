@@ -100,6 +100,9 @@
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
   .btn.paleyellow{background:var(--receipt);color:#6a5410;border:1px solid #f2d886}
   .btn.lightyellow{background:#fff6d0;color:#6a5410;border:1px solid #f6e7a8}
+  .fchip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:5px 12px;
+    font-size:13px;cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fchip.on{background:var(--purple);color:#fff;border-color:var(--purple);font-weight:600}
   .spacer{flex:1}
 
   /* markdown content */
@@ -184,7 +187,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-06.21 · organizer Q&A";
+const APP_VERSION = "2026-08-06.22 · to-do filter";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -570,9 +573,18 @@ async function viewHome() {
         ${items.map(it => `<div class="ritual"><span class="rdot">◆</span><span>${hlInline(it)}</span></div>`).join("")}</div>`;
     }
   } catch (e) {}
+  const tpages = [];
+  { const seen = {};
+    for (const t of todos) { if (!seen[t.path]) { seen[t.path] = { path: t.path, title: t.title, n: 0 }; tpages.push(seen[t.path]); } seen[t.path].n++; }
+    tpages.sort((a, b) => b.n - a.n || a.title.localeCompare(b.title)); }
+  const filterRow = tpages.length > 1 ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+      <button class="fchip on" data-p="" onclick="filterTodos('')">See all · ${todos.length}</button>
+      ${tpages.map(p => `<button class="fchip" data-p="${esc(p.path)}" onclick="filterTodos('${esc(p.path)}')">${esc(p.title)} · ${p.n}</button>`).join("")}
+    </div>` : "";
   const todoCard = `<div class="card" id="todocard"><b class="accent-todo">☑️ To-dos</b>
+    ${filterRow}
     ${todos.length === 0 ? `<div class="muted" style="margin-top:8px">Nothing pending — all clear 🎉</div>` :
-      todos.map((t, i) => `<div class="todo-item">
+      todos.map((t, i) => `<div class="todo-item" data-src="${esc(t.path)}">
         <input type="checkbox" data-i="${i}">
         <div class="grow">${hlInline(t.text)}<div class="src"><a href="#/p/${t.path}">${esc(t.title)}</a></div></div>
       </div>`).join("")}</div>`;
@@ -660,6 +672,11 @@ async function uploadImage(ev, folder, uploadingMsg, doneMsg, kind) {
 }
 const uploadPhoto = ev => uploadImage(ev, "inbox/photos", "Uploading photo…", "Photo saved ✓ — it'll be transcribed and filed", "Photo note");
 const uploadReceipt = ev => uploadImage(ev, "inbox/receipts", "Uploading receipt…", "Receipt saved ✓ — it'll be logged for reimbursement", "Receipt");
+
+function filterTodos(p) {
+  document.querySelectorAll("#todocard .fchip").forEach(c => c.classList.toggle("on", (c.dataset.p || "") === p));
+  document.querySelectorAll("#todocard .todo-item").forEach(el => { el.style.display = (!p || el.dataset.src === p) ? "" : "none"; });
+}
 
 async function sendAnswer(i) {
   const q = (window._orgQuestions || [])[i];
