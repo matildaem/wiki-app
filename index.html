@@ -674,7 +674,7 @@ async function sendAnswer(i) {
     const ref = q.replace(/\s+/g, " ").slice(0, 80);
     const updated = (f ? f.text.replace(/\s*$/, "") : "# 📥 Inbox\n\n---\n<!-- ✍️ Write below this line -->") +
       `\n\n**${date} ${time}**\nanswer: re "${ref}…" → ${text}\n`;
-    await putFile("inbox/inbox.md", updated, `Answer to organizer question (${date})`);
+    await putFile("inbox/inbox.md", updated, `Answer to organizer question (${date})`, f ? f.sha : undefined);
     toast("Answer saved ✓ — the organizer will act on it");
   } catch (e) { toast("Couldn't save — try again"); $("#ansbtn-" + i).disabled = false; }
 }
