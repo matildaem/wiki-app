@@ -187,7 +187,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-06.23 · new key";
+const APP_VERSION = "2026-08-06.24 · new key";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -365,6 +365,7 @@ function renderLogin(msg, keyMode) {
     <div class="err" id="loginerr">${msg ? esc(msg) : ""}</div>
     <button class="btn primary" id="unlock" style="width:100%">Unlock</button>
     <p style="margin-top:14px"><a href="javascript:void(0)" id="altmode" class="muted">${keyMode ? "← back to password" : "use access key instead"}</a></p>
+    <p class="muted" style="font-size:12px;margin-top:18px">v${esc(APP_VERSION)}</p>
   </div>`;
   const validate = async (tok) => {
     const res = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/README.md?ref=${CFG.branch}`,
