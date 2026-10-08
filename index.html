@@ -100,6 +100,7 @@
   .btn.yellow{background:var(--yellowbtn);color:#4a3708}
   .btn.paleyellow{background:var(--receipt);color:#6a5410;border:1px solid #f2d886}
   .btn.lightyellow{background:#fff6d0;color:#6a5410;border:1px solid #f6e7a8}
+  .btn.palegreen{background:#e6f2dd;color:#3c5a2b;border:1px solid #cfe3c0}
   .fchip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:5px 12px;
     font-size:13px;cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .fchip.on{background:var(--purple);color:#fff;border-color:var(--purple);font-weight:600}
@@ -187,7 +188,7 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-08-06.24 · new key";
+const APP_VERSION = "2026-10-08.25 · pdf library";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
@@ -414,6 +415,7 @@ function renderMd(mdText, basePath) {
       e.preventDefault();
       if (resolved.endsWith(".md") || resolved === "") go(resolved ? "p/" + resolved : "");
       else if (/\.(png|jpe?g|gif|webp|heic)$/i.test(resolved)) openImage(resolved);
+      else if (/\.pdf$/i.test(resolved)) openImage(resolved);
       else go("p/" + resolved);
     });
     a.href = "javascript:void(0)";
@@ -597,10 +599,12 @@ async function viewHome() {
       <input type="file" id="photoIn" accept="image/*" style="display:none">
       <input type="file" id="rcptIn" accept="image/*" style="display:none">
       <input type="file" id="transIn" accept=".txt,.vtt,.srt,.md,text/plain" style="display:none">
-      <div class="row" style="gap:8px">
+      <input type="file" id="pdfIn" accept=".pdf,application/pdf" style="display:none">
+      <div class="row" style="gap:8px;flex-wrap:wrap">
         <button class="btn yellow" style="flex:1" onclick="$('#photoIn').click()">📷 Photo</button>
         <button class="btn paleyellow" style="flex:1" onclick="$('#rcptIn').click()">🧾 Receipt</button>
         <button class="btn lightyellow" style="flex:1" onclick="$('#transIn').click()">📝 Transcript</button>
+        <button class="btn palegreen" style="flex:1" onclick="$('#pdfIn').click()">📄 PDF</button>
       </div>
       <button class="btn primary" id="saveQuick" style="width:100%;margin-top:8px">Save</button>
     </div>
@@ -626,6 +630,7 @@ async function viewHome() {
   $("#photoIn").addEventListener("change", uploadPhoto);
   $("#rcptIn").addEventListener("change", uploadReceipt);
   $("#transIn").addEventListener("change", uploadTranscript);
+  $("#pdfIn").addEventListener("change", uploadPdf);
   document.querySelectorAll("#todocard input[type=checkbox]").forEach(box => {
     const t = todos[Number(box.dataset.i)];
     box.addEventListener("change", () => archiveTodo(t.path, t.line, box));
@@ -695,6 +700,32 @@ async function sendAnswer(i) {
     await putFile("inbox/inbox.md", updated, `Answer to organizer question (${date})`, f ? f.sha : undefined);
     toast("Answer saved ✓ — the organizer will act on it");
   } catch (e) { toast("Couldn't save — try again"); $("#ansbtn-" + i).disabled = false; }
+}
+
+async function uploadPdf(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    toast("PDF too big (~20 MB max) — paste its URL as a note: pdf: <title> <link>");
+    ev.target.value = ""; return;
+  }
+  const title = (prompt("Title for this document? (optional)") || "").trim();
+  toast("Uploading PDF…");
+  try {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    const b64 = btoa(bin);
+    const { date } = nowStamp();
+    const base = (title || file.name.replace(/\.[^.]+$/, "")).toLowerCase()
+      .normalize("NFD").replace(/\p{M}/gu, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "document";
+    await putBinary(`inbox/pdfs/${date}-${base}.pdf`, b64, `PDF via wiki app (${date})`);
+    toast("PDF saved ✓ — its text will be extracted and filed");
+  } catch (e) { toast("Upload failed — try again"); }
+  ev.target.value = "";
 }
 
 async function uploadTranscript(ev) {
