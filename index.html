@@ -188,14 +188,14 @@
 <script>
 "use strict";
 const CFG = { owner:"matildaem", repo:"Wiki", branch:"main" };
-const APP_VERSION = "2026-10-08.25 · pdf library";
+const APP_VERSION = "2026-10-13.26 · new key";
 const SECTIONS = [
   { id:"work",     emoji:"💼", name:"Work",     desc:"Projects, meetings, decisions",            cls:"accent-work" },
   { id:"personal", emoji:"🏡", name:"Personal", desc:"Health, finances, travel, life admin",     cls:"accent-personal" },
   { id:"learning", emoji:"📚", name:"Learning", desc:"Study notes, how-tos, reference",          cls:"accent-learning" },
 ];
 let token = localStorage.getItem("wikiToken") || "";
-const VAULT = {"salt":"bipWykj9xd7M6FtAAnQhHQ==","iv":"tyJWiCc64lEGganK","ct":"E8nB8AVLNi3baThmWile/OjI1bgd7NJh4VLNvZq5SO9nef10/UiA62UpLAd9uAyt+9Eyq1RBTazibZHuQpdXuOXCk7r7dkRySJTpg/wrePCLnBNCi0DMPZNeIh46B4m3zMoXYtE6utPD9TjL1A==","iter":1000000};
+const VAULT = {"salt":"cctqOBThSlt7iirBH0qq7g==","iv":"lVIXBT3DOPqNXTcX","ct":"spUaY/oE1tLEPamImh697qkLutUGmKDSUREo1e7dliAb3+SVDGqzOnsmtCnTDxTSk+N8MTfY6NBUt7hWJemlms/pkhQETDIMQmO/I3cUSlWaAWgRgqmhJZb0HCLMYtnCKPSXYd+xbdLdNpkOoQ==","iter":1000000};
 async function unlockVault(password) {
   const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
   const enc = new TextEncoder();
